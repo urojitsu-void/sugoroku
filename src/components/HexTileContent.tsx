@@ -10,10 +10,10 @@ interface HexTileContentProps {
 
 export function HexTileContent({ node, players, width }: HexTileContentProps) {
   const contentStyle: React.CSSProperties = {
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
     padding: 2,
   }
 

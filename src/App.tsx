@@ -1,5 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react'
+import goalAudio from './assets/goal.mp3'
 import { Board } from './components/Board'
+import { DiceOverlay } from './components/DiceOverlay'
+import { PlayerCountOverlay } from './components/PlayerCountOverlay'
 import { boardData, boardNodeMap, previousNodeMap, type MoveDirection } from './data/board'
 import type { PlayerState } from './types/player'
 
@@ -8,17 +11,12 @@ interface BranchChoice {
   options: string[]
   stepsRemaining: number
   direction: MoveDirection
-}
-
-interface MovementOutcome {
-  players: PlayerState[]
-  stepsRemaining: number
-  branchOptions?: string[]
+  snapshot: PlayerState[]
 }
 
 const PLAYER_COLORS = ['#ff6b6b', '#4dabf7', '#ffd43b', '#845ef7']
-const PLAYER_LABELS = ['V1', 'V2', 'V3', 'V4']
-
+const PLAYER_BOARD_LABELS = ['P1', 'P2', 'P3', 'P4']
+const PLAYER_NAMES = ['Player1', 'Player2', 'Player3', 'Player4']
 const styles: Record<string, CSSProperties> = {
   app: {
     minHeight: '100vh',
@@ -77,34 +75,7 @@ const styles: Record<string, CSSProperties> = {
     padding: '0.8rem',
     border: '1px solid transparent',
   },
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.7)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 20,
-  },
-  overlayCard: {
-    background: 'rgba(7,11,31,0.95)',
-    padding: '2rem',
-    borderRadius: 24,
-    textAlign: 'center',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  overlayButtons: { display: 'flex', gap: '1rem', justifyContent: 'center' },
-  overlayButton: {
-    fontSize: '1.1rem',
-    borderRadius: 12,
-    padding: '0.6rem 1.2rem',
-    border: 'none',
-    cursor: 'pointer',
-    background: '#4dabf7',
-    color: '#050b17',
-  },
+  overlay: {},
   branchHint: {
     position: 'fixed',
     bottom: '1rem',
@@ -116,50 +87,20 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
     zIndex: 10,
   },
-}
-
-const resolveMovement = (
-  players: PlayerState[],
-  playerIndex: number,
-  steps: number,
-  direction: MoveDirection
-): MovementOutcome => {
-  let remaining = steps
-  let workingPlayers = players
-
-  while (remaining > 0) {
-    const player = workingPlayers[playerIndex]
-    if (!player) {
-      break
-    }
-
-    const currentNode = boardNodeMap.get(player.positionId)
-    const nextCandidates =
-      direction === 'forward'
-        ? currentNode?.next ?? []
-        : previousNodeMap.get(player.positionId) ?? []
-
-    if (nextCandidates.length === 0) {
-      remaining = 0
-      break
-    }
-
-    if (nextCandidates.length > 1) {
-      return {
-        players: workingPlayers,
-        stepsRemaining: remaining,
-        branchOptions: nextCandidates,
-      }
-    }
-
-    const targetId = nextCandidates[0]
-    workingPlayers = workingPlayers.map((state, idx) =>
-      idx === playerIndex ? { ...state, positionId: targetId } : state
-    )
-    remaining -= 1
-  }
-
-  return { players: workingPlayers, stepsRemaining: remaining }
+  diceOverlay: {
+    position: 'fixed',
+    inset: 0,
+    pointerEvents: 'none',
+    zIndex: 15,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  diceOverlayImage: {
+    width: 180,
+    height: 180,
+    filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.5))',
+  },
 }
 
 const rotatePlayer = (players: PlayerState[], finishedIndex: number) => {
@@ -182,8 +123,12 @@ const rotatePlayer = (players: PlayerState[], finishedIndex: number) => {
       continue
     }
 
+    if (candidate.finished) {
+      continue
+    }
+
     if (candidate.skipTurns > 0) {
-      skippedMessages.push(`${candidate.name}はおやすみ`)
+      skippedMessages.push(`${PLAYER_NAMES[candidate.id]}はおやすみ`)
       workingPlayers = workingPlayers.map((state, idx) =>
         idx === nextIndex ? { ...state, skipTurns: state.skipTurns - 1 } : state
       )
@@ -198,13 +143,16 @@ const rotatePlayer = (players: PlayerState[], finishedIndex: number) => {
 
 function App() {
   const [players, setPlayers] = useState<PlayerState[]>([])
+  const [pendingPlayerCount, setPendingPlayerCount] = useState(1)
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [diceResult, setDiceResult] = useState<number | null>(null)
+  const [finishOrder, setFinishOrder] = useState<PlayerState[]>([])
   const [message, setMessage] = useState('プレイヤー人数を選んでスタート！')
   const [branchChoice, setBranchChoice] = useState<BranchChoice | null>(null)
   const [branchSelectionIndex, setBranchSelectionIndex] = useState(0)
   const [isMoving, setIsMoving] = useState(false)
-  const [winnerId, setWinnerId] = useState<number | null>(null)
+  const [isDiceRolling, setIsDiceRolling] = useState(false)
+  const [goalSound] = useState(() => new Audio(goalAudio))
 
   const branchSelectedId = branchChoice
     ? branchChoice.options[branchSelectionIndex]
@@ -213,19 +161,21 @@ function App() {
   const startGame = (count: number) => {
     const nextPlayers: PlayerState[] = Array.from({ length: count }).map((_, idx) => ({
       id: idx,
-      name: PLAYER_LABELS[idx],
+      name: PLAYER_BOARD_LABELS[idx],
       color: PLAYER_COLORS[idx],
       positionId: boardData.startId,
       skipTurns: 0,
+      finished: false,
     }))
     setPlayers(nextPlayers)
     setCurrentPlayerIndex(0)
     setBranchChoice(null)
     setBranchSelectionIndex(0)
-    setWinnerId(null)
+    setFinishOrder([])
     setDiceResult(null)
     setIsMoving(false)
     setMessage('画面をクリックしてダイスを振ろう！')
+    setPendingPlayerCount(count)
   }
 
   const resetGame = () => {
@@ -233,10 +183,13 @@ function App() {
     setCurrentPlayerIndex(0)
     setBranchChoice(null)
     setBranchSelectionIndex(0)
-    setWinnerId(null)
     setDiceResult(null)
     setIsMoving(false)
     setMessage('プレイヤー人数を選んでスタート！')
+  }
+
+  const animateDice = () => {
+    setIsDiceRolling(true)
   }
 
   const continueMovement = (
@@ -245,27 +198,53 @@ function App() {
     steps: number,
     direction: MoveDirection
   ) => {
-    if (steps <= 0) {
-      finalizeLanding(basePlayers, playerIndex)
-      return
+    const stepMove = (currentState: PlayerState[], remaining: number) => {
+      if (remaining <= 0) {
+        finalizeLanding(currentState, playerIndex)
+        return
+      }
+
+      const player = currentState[playerIndex]
+      if (!player) {
+        finalizeLanding(currentState, playerIndex)
+        return
+      }
+
+      const currentNode = boardNodeMap.get(player.positionId)
+      const nextCandidates =
+        direction === 'forward'
+          ? currentNode?.next ?? []
+          : previousNodeMap.get(player.positionId) ?? []
+
+      if (nextCandidates.length === 0) {
+        finalizeLanding(currentState, playerIndex)
+        return
+      }
+
+      if (nextCandidates.length > 1) {
+        setBranchChoice({
+          playerIndex,
+          options: nextCandidates,
+          stepsRemaining: remaining,
+          direction,
+          snapshot: currentState,
+        })
+        setBranchSelectionIndex(0)
+        setIsMoving(false)
+        setMessage('分岐マス！←→キーで選んでクリックで決定')
+        return
+      }
+
+      const targetId = nextCandidates[0]
+      const updated = currentState.map((candidate, idx) =>
+        idx === playerIndex ? { ...candidate, positionId: targetId } : candidate
+      )
+      setPlayers(updated)
+      setTimeout(() => stepMove(updated, remaining - 1), 350)
     }
 
-    const outcome = resolveMovement(basePlayers, playerIndex, steps, direction)
-    setPlayers(outcome.players)
-
-    if (outcome.branchOptions) {
-      setBranchChoice({
-        playerIndex,
-        options: outcome.branchOptions,
-        stepsRemaining: outcome.stepsRemaining,
-        direction,
-      })
-      setBranchSelectionIndex(0)
-      setMessage('分岐マス！←→キーで選んでクリックで決定')
-      return
-    }
-
-    finalizeLanding(outcome.players, playerIndex)
+    setIsMoving(true)
+    stepMove(basePlayers, steps)
   }
 
   const finalizeLanding = (state: PlayerState[], playerIndex: number) => {
@@ -281,10 +260,23 @@ function App() {
       return
     }
 
-    setMessage(`${player.name}：${node.title}｜${node.description}`)
+    setMessage(`${PLAYER_NAMES[player.id]}：${node.title}｜${node.description}`)
 
     if (player.positionId === boardData.goalId) {
-      setWinnerId(player.id)
+      const updatedPlayers = state.map((candidate, idx) =>
+        idx === playerIndex ? { ...candidate, finished: true } : candidate
+      )
+      setPlayers(updatedPlayers)
+      const snapshot = { ...updatedPlayers[playerIndex] }
+      setFinishOrder((prev) => {
+        if (prev.some((p) => p.id === snapshot.id)) return prev
+        return [...prev, snapshot]
+      })
+      goalSound.currentTime = 0
+      goalSound.play().catch(() => {})
+      const rotation = rotatePlayer(updatedPlayers, playerIndex)
+      setPlayers(rotation.players)
+      setCurrentPlayerIndex(rotation.nextIndex)
       setIsMoving(false)
       return
     }
@@ -313,7 +305,7 @@ function App() {
       setPlayers(rotation.players)
       setCurrentPlayerIndex(rotation.nextIndex)
       if (rotation.skippedMessages.length > 0) {
-        setMessage(`${player.name}は${effect.turns}回休み！\n${rotation.skippedMessages.join(' / ')}`)
+        setMessage(`${PLAYER_NAMES[player.id]}は${effect.turns}回休み！\n${rotation.skippedMessages.join(' / ')}`)
       }
       return
     }
@@ -335,33 +327,33 @@ function App() {
     const targetId = branchChoice.options[branchSelectionIndex] ?? branchChoice.options[0]
     setBranchChoice(null)
 
-    setPlayers((prev) => {
-      const updated = prev.map((player, idx) =>
-        idx === branchChoice.playerIndex ? { ...player, positionId: targetId } : player
-      )
+    const baseState = branchChoice.snapshot
+    const updated = baseState.map((player, idx) =>
+      idx === branchChoice.playerIndex ? { ...player, positionId: targetId } : player
+    )
+    setPlayers(updated)
 
-      const remaining = branchChoice.stepsRemaining - 1
-      if (remaining > 0) {
-        continueMovement(updated, branchChoice.playerIndex, remaining, branchChoice.direction)
-      } else {
-        finalizeLanding(updated, branchChoice.playerIndex)
-      }
-      return updated
-    })
+    const remaining = branchChoice.stepsRemaining - 1
+    if (remaining > 0) {
+      continueMovement(updated, branchChoice.playerIndex, remaining, branchChoice.direction)
+    } else {
+      finalizeLanding(updated, branchChoice.playerIndex)
+    }
   }
 
   const handleGlobalClick = () => {
     if (!players.length) {
+      startGame(pendingPlayerCount)
       return
     }
-    if (winnerId !== null) {
+    if (players.length > 0 && finishOrder.length === players.length) {
       return
     }
     if (branchChoice) {
       confirmBranchSelection()
       return
     }
-    if (isMoving) {
+    if (isMoving || isDiceRolling) {
       return
     }
 
@@ -370,19 +362,32 @@ function App() {
       return
     }
 
-    const roll = Math.floor(Math.random() * 6) + 1
-    setDiceResult(roll)
-    setIsMoving(true)
-    setMessage(`${currentPlayer.name}のダイス：${roll}`)
-    continueMovement(players, currentPlayerIndex, roll, 'forward')
+    setMessage(`${PLAYER_NAMES[currentPlayer.id]}のダイスをロール中…`)
+    animateDice()
   }
 
   useEffect(() => {
-    if (!branchChoice) {
-      return
-    }
-
     const handleKey = (event: KeyboardEvent) => {
+      if (!players.length) {
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault()
+          setPendingPlayerCount((prev) => (prev - 1 < 1 ? 4 : prev - 1))
+        }
+        if (event.key === 'ArrowRight') {
+          event.preventDefault()
+          setPendingPlayerCount((prev) => (prev + 1 > 4 ? 1 : prev + 1))
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          startGame(pendingPlayerCount)
+        }
+        return
+      }
+
+      if (!branchChoice) {
+        return
+      }
+
       if (event.key === 'ArrowLeft') {
         event.preventDefault()
         setBranchSelectionIndex((prev) =>
@@ -397,7 +402,7 @@ function App() {
 
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [branchChoice])
+  }, [branchChoice, pendingPlayerCount, players.length])
 
   useEffect(() => {
     if (!branchChoice) {
@@ -422,10 +427,17 @@ function App() {
         />
         <div style={styles.dicePanel} onClick={(event) => event.stopPropagation()}>
           <div style={styles.diceValue}>{diceResult ?? '？'}</div>
-          <div>現在のプレイヤー：{players[currentPlayerIndex]?.name ?? '-'}</div>
+          <div>現在のプレイヤー：{players[currentPlayerIndex] ? PLAYER_NAMES[players[currentPlayerIndex].id] : '-'}</div>
           <div style={styles.status}>{message}</div>
-          {winnerId !== null && (
-            <div style={styles.winner}>{`おめでとう！${players.find((p) => p.id === winnerId)?.name ?? ''}がゴール`}</div>
+          {finishOrder.length > 0 && (
+            <div style={styles.winner}>
+              <strong>ゴール順位</strong>
+              <ol>
+                {finishOrder.map((player, index) => (
+                  <li key={player.id}>{`${index + 1}位: ${PLAYER_NAMES[player.id]}`}</li>
+                ))}
+              </ol>
+            </div>
           )}
           <button type="button" style={styles.resetButton} onClick={resetGame}>
             ゲームをリセット
@@ -435,15 +447,15 @@ function App() {
 
       <section style={styles.playersPanel} onClick={(event) => event.stopPropagation()}>
         {players.map((player, idx) => (
-          <div
-            key={player.id}
-            style={{
-              ...styles.playerCard,
-              borderColor: idx === currentPlayerIndex ? '#ffcf56' : 'transparent',
-            }}
-          >
+           <div
+             key={player.id}
+             style={{
+               ...styles.playerCard,
+               borderColor: idx === currentPlayerIndex ? '#ffcf56' : 'transparent',
+             }}
+           >
             <div style={{ fontSize: '1.2rem', fontWeight: 700, color: player.color }}>
-              {player.name}
+              {PLAYER_NAMES[player.id]}
             </div>
             <div>位置：{boardNodeMap.get(player.positionId)?.title ?? '-'}</div>
             <div>一回休み：{player.skipTurns}</div>
@@ -452,23 +464,12 @@ function App() {
       </section>
 
       {!players.length && (
-        <div style={styles.overlay} onClick={(event) => event.stopPropagation()}>
-          <div style={styles.overlayCard}>
-            <h2>参加人数を選択</h2>
-            <div style={styles.overlayButtons}>
-              {[1, 2, 3, 4].map((count) => (
-                <button
-                  key={count}
-                  type="button"
-                  style={styles.overlayButton}
-                  onClick={() => startGame(count)}
-                >
-                  {count}人
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <PlayerCountOverlay
+          active={!players.length}
+          selectedCount={pendingPlayerCount}
+          onChange={setPendingPlayerCount}
+          onConfirm={() => startGame(pendingPlayerCount)}
+        />
       )}
 
       {branchChoice && (
@@ -477,6 +478,18 @@ function App() {
           <p>残りステップ：{branchChoice.stepsRemaining}</p>
         </div>
       )}
+
+      <DiceOverlay
+        rolling={isDiceRolling}
+        onComplete={(value) => {
+          setIsDiceRolling(false)
+          setDiceResult(value)
+          const current = players[currentPlayerIndex]
+          const label = current ? PLAYER_NAMES[current.id] : ''
+          setMessage(`${label}のダイス：${value}`)
+          continueMovement(players, currentPlayerIndex, value, 'forward')
+        }}
+      />
     </main>
   )
 }

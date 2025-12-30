@@ -1,13 +1,13 @@
 import React, { type ReactNode } from 'react'
-import type { BoardNode } from '../data/board'
 interface HexTileProps {
-  node: BoardNode
   center: { x: number; y: number }
   width: number
   height: number
   isActive: boolean
   isBranchOption: boolean
   isBranchSelected: boolean
+  fill: string
+  border: string
   children?: ReactNode
 }
 
@@ -20,28 +20,18 @@ export const FLAT_HEX_POINTS = [
   { x: 0, y: 0.5 },
 ]
 
-const COLOR_MAP: Record<BoardNode['kind'], { fill: string; border: string }> = {
-  start: { fill: '#533657', border: '#ffb5d1' },
-  goal: { fill: '#3a5a40', border: '#9effc7' },
-  bonus: { fill: '#7e5a1a', border: '#ffd26c' },
-  penalty: { fill: '#5f1e2c', border: '#ff96b0' },
-  rest: { fill: '#1d3c64', border: '#8fd4ff' },
-  branch: { fill: '#4d2b8a', border: '#c792ff' },
-  normal: { fill: '#192336', border: '#7f8fa6' },
-}
-
 export function HexTile({
-  node,
   center,
   width,
   height,
   isActive,
   isBranchOption,
   isBranchSelected,
+  fill,
+  border,
   children,
 }: HexTileProps) {
   const pointString = FLAT_HEX_POINTS.map((point) => `${point.x * width},${point.y * height}`).join(' ')
-  const { fill, border } = COLOR_MAP[node.kind]
   const strokeWidth = isActive ? 3.5 : 2
 
   const wrapperStyle: React.CSSProperties = {

@@ -4,4 +4,5 @@ export interface PlayerState {
   color: string
   positionId: string
   skipTurns: number
+  finished: boolean
 }

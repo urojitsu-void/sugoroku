@@ -4,6 +4,7 @@ import type { PlayerState } from '../types/player'
 import { computeBoardLayout, type LayoutEntry } from '../utils/layout'
 import { HexTile } from './HexTile'
 import { HexTileContent } from './HexTileContent'
+import type { BoardNode } from '../data/board'
 
 interface BoardProps {
   board: BoardData
@@ -45,6 +46,19 @@ interface GeometrySpec {
   spacingX: number
   spacingY: number
   maxRows: number
+}
+
+const LEFT_ROUTE_IDS = new Set(['leftLaugh', 'leftDetour', 'leftMemory'])
+const RIGHT_ROUTE_IDS = new Set(['rightGame', 'rightSecret', 'rightShortcut'])
+
+const getTileColors = (node: BoardNode, board: BoardData) => {
+  if (node.id === board.startId) return { fill: '#533657', border: '#ffb5d1' }
+  if (node.id === board.goalId) return { fill: '#3a5a40', border: '#9effc7' }
+  if (node.id === 'branchGate') return { fill: '#4d2b8a', border: '#c792ff' }
+  if (node.id === 'reunion') return { fill: '#1b4f5a', border: '#8ef0c9' }
+  if (LEFT_ROUTE_IDS.has(node.id)) return { fill: '#c06c36', border: '#ffd6ae' }
+  if (RIGHT_ROUTE_IDS.has(node.id)) return { fill: '#1f4ca0', border: '#93bbff' }
+  return { fill: '#1c2336', border: '#7f8fa6' }
 }
 
 const projectPosition = (
@@ -133,16 +147,18 @@ export function Board({ board, players, branchOptions, selectedBranchId, current
           return null
         }
         const playersOnNode = playersByNode.get(entry.node.id) ?? []
+        const colors = getTileColors(entry.node, board)
         return (
           <HexTile
             key={entry.node.id}
-            node={entry.node}
             center={coords}
             width={geometry.hexWidth}
             height={geometry.hexHeight}
             isActive={entry.node.id === highlightNodeId}
             isBranchOption={branchOptionSet.has(entry.node.id)}
             isBranchSelected={!!selectedBranchId && entry.node.id === selectedBranchId}
+            fill={colors.fill}
+            border={colors.border}
           >
             <HexTileContent
               node={entry.node}

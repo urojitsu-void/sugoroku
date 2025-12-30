@@ -6,103 +6,147 @@
       "id": "start",
       "title": "配信スタート",
       "description": "オープニングトークでテンションを上げる",
-      "next": ["warmup"],
+      "next": [
+        "warmup"
+      ],
       "kind": "start"
     },
     {
       "id": "warmup",
       "title": "準備運動",
-      "description": "過去の失敗談を軽く小出しにして雰囲気作り",
-      "next": ["challenge"],
+      "description": "過去の失敗談を軽く小出しにして雰囲気作り（1マス進む）",
+      "next": [
+        "challenge"
+      ],
       "kind": "bonus",
-      "effect": { "type": "move", "steps": 1 }
+      "effect": {
+        "type": "move",
+        "steps": 1
+      }
     },
     {
       "id": "challenge",
       "title": "黒歴史チャレンジ",
       "description": "視聴者に言われるがまま無茶振りを受ける",
-      "next": ["branchGate"],
+      "next": [
+        "branchGate"
+      ],
       "kind": "normal"
     },
     {
       "id": "branchGate",
       "title": "分岐トラップ",
       "description": "左は共感、右はチャレンジコース",
-      "next": ["leftLaugh", "rightGame"],
+      "next": [
+        "leftLaugh",
+        "rightGame"
+      ],
       "kind": "branch"
     },
     {
       "id": "leftLaugh",
       "title": "笑える失敗談",
       "description": "マイクを逆向きで喋ってた事件を披露",
-      "next": ["leftDetour"],
+      "next": [
+        "leftDetour"
+      ],
       "kind": "normal"
     },
     {
       "id": "leftDetour",
       "title": "寄り道インタビュー",
-      "description": "スタッフに突撃取材されてアタフタ",
-      "next": ["leftMemory"],
+      "description": "スタッフに突撃取材されてアタフタ（1マス戻る）",
+      "next": [
+        "leftMemory"
+      ],
       "kind": "penalty",
-      "effect": { "type": "move", "steps": -1 }
+      "effect": {
+        "type": "move",
+        "steps": -1
+      }
     },
     {
       "id": "leftMemory",
       "title": "語り部モード",
       "description": "過去の闇歴史をしっとり語る",
-      "next": ["reunion"],
+      "next": [
+        "reunion"
+      ],
       "kind": "normal"
     },
     {
       "id": "rightGame",
       "title": "即興ゲーム",
-      "description": "視聴者の指示でモノマネ３連発",
-      "next": ["rightSecret"],
+      "description": "視聴者の指示でモノマネ３連発（1マス進む）",
+      "next": [
+        "rightSecret"
+      ],
       "kind": "bonus",
-      "effect": { "type": "move", "steps": 1 }
+      "effect": {
+        "type": "move",
+        "steps": 1
+      }
     },
     {
       "id": "rightSecret",
       "title": "秘密暴露タイム",
       "description": "デビュー前の恥ずかしい特技を晒す",
-      "next": ["rightShortcut"],
+      "next": [
+        "rightShortcut"
+      ],
       "kind": "normal"
     },
     {
       "id": "rightShortcut",
       "title": "神回ショートカット",
       "description": "勢いそのまま話題がバズる",
-      "next": ["reunion"],
+      "next": [
+        "reunion"
+      ],
       "kind": "bonus"
     },
     {
       "id": "reunion",
       "title": "合流トーク",
       "description": "全ルートの話題をまとめて笑いに変える",
-      "next": ["karaoke"],
+      "next": [
+        "karaoke"
+      ],
       "kind": "normal"
     },
     {
       "id": "karaoke",
       "title": "無茶ぶりソング",
-      "description": "即興歌唱で喉を酷使、次のターンは休憩",
-      "next": ["prank"],
+      "description": "即興歌唱で喉を酷使、次のターンは休憩（1回休み）",
+      "next": [
+        "prank"
+      ],
       "kind": "rest",
-      "effect": { "type": "skip", "turns": 1 }
+      "effect": {
+        "type": "skip",
+        "turns": 1
+      }
     },
     {
       "id": "prank",
       "title": "ドッキリ勃発",
-      "description": "突然のサプライズでオロオロ、２マス戻る",
-      "next": ["finale"],
+      "description": "突然のサプライズでオロオロ（2マス戻る）",
+      "next": [
+        "finale"
+      ],
       "kind": "penalty",
-      "effect": { "type": "move", "steps": -2 }
+      "effect": {
+        "type": "move",
+        "steps": -2
+      }
     },
     {
       "id": "finale",
       "title": "エンディング前説",
       "description": "感謝を伝えつつ次の企画を宣伝",
-      "next": ["goal"],
+      "next": [
+        "goal"
+      ],
       "kind": "normal"
     },
     {
