@@ -3,7 +3,11 @@ import goalAudio from './assets/goal.mp3'
 import { Board } from './components/Board'
 import { DiceOverlay } from './components/DiceOverlay'
 import { PlayerCountOverlay } from './components/PlayerCountOverlay'
-import { boardData, boardNodeMap, previousNodeMap, type MoveDirection } from './data/board'
+import { ControlPanel } from './components/ControlPanel'
+import { PlayersPanel } from './components/PlayersPanel'
+import { TileDetailModal } from './components/TileDetailModal'
+import { BranchChoiceModal } from './components/BranchChoiceModal'
+import { boardData, boardNodeMap, previousNodeMap, type MoveDirection, type BoardNode } from './data/board'
 import type { PlayerState } from './types/player'
 
 interface BranchChoice {
@@ -35,47 +39,6 @@ const styles: Record<string, CSSProperties> = {
     gap: '1.5rem',
     alignItems: 'flex-start',
   },
-  dicePanel: {
-    flex: '0 0 260px',
-    background: 'rgba(255,255,255,0.08)',
-    borderRadius: 24,
-    padding: '1rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.8rem',
-    border: '1px solid rgba(255,255,255,0.12)',
-  },
-  diceValue: { fontSize: '4rem', fontWeight: 700, textAlign: 'center' },
-  status: { minHeight: '3rem', whiteSpace: 'pre-line' },
-  winner: {
-    background: 'rgba(118,230,160,0.2)',
-    border: '1px solid rgba(118,230,160,0.6)',
-    borderRadius: 12,
-    padding: '0.5rem',
-    textAlign: 'center',
-    fontWeight: 600,
-  },
-  resetButton: {
-    marginTop: 'auto',
-    borderRadius: 999,
-    padding: '0.4rem 0.8rem',
-    border: '1px solid rgba(255,255,255,0.4)',
-    background: 'transparent',
-    color: 'inherit',
-    cursor: 'pointer',
-  },
-  playersPanel: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-    gap: '1rem',
-  },
-  playerCard: {
-    borderRadius: 16,
-    background: 'rgba(255,255,255,0.08)',
-    padding: '0.8rem',
-    border: '1px solid transparent',
-  },
-  overlay: {},
   branchHint: {
     position: 'fixed',
     bottom: '1rem',
@@ -86,20 +49,6 @@ const styles: Record<string, CSSProperties> = {
     padding: '0.8rem 1rem',
     boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
     zIndex: 10,
-  },
-  diceOverlay: {
-    position: 'fixed',
-    inset: 0,
-    pointerEvents: 'none',
-    zIndex: 15,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  diceOverlayImage: {
-    width: 180,
-    height: 180,
-    filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.5))',
   },
 }
 
@@ -153,6 +102,8 @@ function App() {
   const [isMoving, setIsMoving] = useState(false)
   const [isDiceRolling, setIsDiceRolling] = useState(false)
   const [goalSound] = useState(() => new Audio(goalAudio))
+  const [detailNode, setDetailNode] = useState<BoardNode | null>(null)
+  const [detailPlayer, setDetailPlayer] = useState<string | null>(null)
 
   const branchSelectedId = branchChoice
     ? branchChoice.options[branchSelectionIndex]
@@ -176,6 +127,8 @@ function App() {
     setIsMoving(false)
     setMessage('画面をクリックしてダイスを振ろう！')
     setPendingPlayerCount(count)
+    setDetailNode(null)
+    setDetailPlayer(null)
   }
 
   const resetGame = () => {
@@ -183,9 +136,12 @@ function App() {
     setCurrentPlayerIndex(0)
     setBranchChoice(null)
     setBranchSelectionIndex(0)
+    setFinishOrder([])
     setDiceResult(null)
     setIsMoving(false)
     setMessage('プレイヤー人数を選んでスタート！')
+    setDetailNode(null)
+    setDetailPlayer(null)
   }
 
   const animateDice = () => {
@@ -261,6 +217,8 @@ function App() {
     }
 
     setMessage(`${PLAYER_NAMES[player.id]}：${node.title}｜${node.description}`)
+    setDetailNode(node)
+    setDetailPlayer(PLAYER_NAMES[player.id])
 
     if (player.positionId === boardData.goalId) {
       const updatedPlayers = state.map((candidate, idx) =>
@@ -273,7 +231,7 @@ function App() {
         return [...prev, snapshot]
       })
       goalSound.currentTime = 0
-      goalSound.play().catch(() => {})
+      goalSound.play().catch(() => { })
       const rotation = rotatePlayer(updatedPlayers, playerIndex)
       setPlayers(rotation.players)
       setCurrentPlayerIndex(rotation.nextIndex)
@@ -294,9 +252,9 @@ function App() {
       const updatedPlayers = state.map((candidate, idx) =>
         idx === playerIndex
           ? {
-              ...candidate,
-              skipTurns: candidate.skipTurns + effect.turns,
-            }
+            ...candidate,
+            skipTurns: candidate.skipTurns + effect.turns,
+          }
           : candidate
       )
       setPlayers(updatedPlayers)
@@ -425,42 +383,18 @@ function App() {
           selectedBranchId={branchSelectedId}
           currentPlayerIndex={currentPlayerIndex}
         />
-        <div style={styles.dicePanel} onClick={(event) => event.stopPropagation()}>
-          <div style={styles.diceValue}>{diceResult ?? '？'}</div>
-          <div>現在のプレイヤー：{players[currentPlayerIndex] ? PLAYER_NAMES[players[currentPlayerIndex].id] : '-'}</div>
-          <div style={styles.status}>{message}</div>
-          {finishOrder.length > 0 && (
-            <div style={styles.winner}>
-              <strong>ゴール順位</strong>
-              <ol>
-                {finishOrder.map((player, index) => (
-                  <li key={player.id}>{`${index + 1}位: ${PLAYER_NAMES[player.id]}`}</li>
-                ))}
-              </ol>
-            </div>
-          )}
-          <button type="button" style={styles.resetButton} onClick={resetGame}>
-            ゲームをリセット
-          </button>
-        </div>
+        <ControlPanel
+          diceResult={diceResult}
+          currentPlayer={players[currentPlayerIndex]}
+          message={message}
+          finishOrder={finishOrder}
+          onReset={resetGame}
+          playerNames={PLAYER_NAMES}
+        />
       </section>
 
-      <section style={styles.playersPanel} onClick={(event) => event.stopPropagation()}>
-        {players.map((player, idx) => (
-           <div
-             key={player.id}
-             style={{
-               ...styles.playerCard,
-               borderColor: idx === currentPlayerIndex ? '#ffcf56' : 'transparent',
-             }}
-           >
-            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: player.color }}>
-              {PLAYER_NAMES[player.id]}
-            </div>
-            <div>位置：{boardNodeMap.get(player.positionId)?.title ?? '-'}</div>
-            <div>一回休み：{player.skipTurns}</div>
-          </div>
-        ))}
+      <section onClick={(event) => event.stopPropagation()}>
+        <PlayersPanel players={players} currentPlayerIndex={currentPlayerIndex} playerNames={PLAYER_NAMES} />
       </section>
 
       {!players.length && (
@@ -490,6 +424,25 @@ function App() {
           continueMovement(players, currentPlayerIndex, value, 'forward')
         }}
       />
+
+      <TileDetailModal
+        node={detailNode}
+        playerName={detailPlayer}
+        onClose={() => {
+          setDetailNode(null)
+          setDetailPlayer(null)
+        }}
+      />
+
+      {branchChoice && (
+        <BranchChoiceModal
+          options={branchChoice.options}
+          currentIndex={branchSelectionIndex}
+          onChange={(index) => setBranchSelectionIndex(index)}
+          onConfirm={confirmBranchSelection}
+          getNodeTitle={(id) => boardNodeMap.get(id)?.title ?? id}
+        />
+      )}
     </main>
   )
 }
