@@ -45,8 +45,8 @@ export function BranchChoiceModal({ options, currentIndex, onChange, onConfirm, 
   return (
     <div style={overlayStyle} onClick={onConfirm}>
       <div style={cardStyle} onClick={(event) => event.stopPropagation()}>
-        <h3>ルートを選択</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+        <h3 style={{ fontSize: '1.8rem' }}>ルートを選択</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {options.map((id, index) => (
             <div
               key={id}
@@ -57,11 +57,11 @@ export function BranchChoiceModal({ options, currentIndex, onChange, onConfirm, 
               }}
               onClick={() => onChange(index)}
             >
-              {getNodeTitle(id)}
+              <span style={{ fontSize: '1.8rem', fontWeight: 700 }}>{getNodeTitle(id)}</span>
             </div>
           ))}
         </div>
-        <p>← / → で選択し、画面タップで決定</p>
+        <p style={{ fontSize: '1.1rem' }}>← / → で選択し、画面タップで決定</p>
       </div>
     </div>
   )

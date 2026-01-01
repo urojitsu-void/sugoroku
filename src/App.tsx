@@ -406,13 +406,6 @@ function App() {
         />
       )}
 
-      {branchChoice && (
-        <div style={styles.branchHint}>
-          <p>分岐を選択中：{branchChoice.options[branchSelectionIndex]}</p>
-          <p>残りステップ：{branchChoice.stepsRemaining}</p>
-        </div>
-      )}
-
       <DiceOverlay
         rolling={isDiceRolling}
         onComplete={(value) => {

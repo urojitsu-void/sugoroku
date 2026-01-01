@@ -46,9 +46,9 @@ export function TileDetailModal({ node, playerName, onClose }: TileDetailModalPr
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={cardStyle} onClick={(event) => event.stopPropagation()}>
-        {playerName && <p style={{ margin: 0, fontSize: '1rem' }}>{playerName}が停止</p>}
-        <h3 style={{ margin: 0, fontSize: '1.6rem' }}>{node.title}</h3>
-        <p style={{ fontSize: '1rem', lineHeight: 1.5 }}>{node.description}</p>
+        {playerName && <p style={{ margin: 0, fontSize: '1.2rem' }}>{playerName}が停止</p>}
+        <h3 style={{ margin: 0, fontSize: '2rem' }}>{node.title}</h3>
+        <p style={{ fontSize: '1.8rem', lineHeight: 1.6, fontWeight: 700 }}>{node.description}</p>
         <button type="button" style={buttonStyle} onClick={onClose}>
           閉じる
         </button>
