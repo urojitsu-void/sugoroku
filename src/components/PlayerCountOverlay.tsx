@@ -28,13 +28,14 @@ const cardStyle: React.CSSProperties = {
 }
 
 const buttonStyle: React.CSSProperties = {
-  fontSize: '1.1rem',
-  borderRadius: 12,
-  padding: '0.6rem 1.2rem',
+  fontSize: '1.4rem',
+  fontWeight: 700,
+  borderRadius: 16,
+  padding: '0.8rem 1.6rem',
   border: 'none',
   cursor: 'pointer',
   background: '#4dabf7',
-  color: '#050b17',
+  color: '#ffffff',
 }
 
 export function PlayerCountOverlay({ active, selectedCount, onChange, onConfirm }: PlayerCountOverlayProps) {
@@ -43,15 +44,15 @@ export function PlayerCountOverlay({ active, selectedCount, onChange, onConfirm 
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <h2>参加人数を選択</h2>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>参加人数を選択</h2>
+        <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
           {[1, 2, 3, 4].map((count) => (
             <button
               key={count}
               type="button"
               style={{
                 ...buttonStyle,
-                border: count === selectedCount ? '2px solid #ffcf56' : 'none',
+                border: count === selectedCount ? '3px solid #ffcf56' : 'none',
               }}
               onClick={(event) => {
                 event.stopPropagation()
@@ -62,8 +63,12 @@ export function PlayerCountOverlay({ active, selectedCount, onChange, onConfirm 
             </button>
           ))}
         </div>
-        <p>← / → で選択、画面クリックで決定</p>
-        <button type="button" style={{ ...buttonStyle, background: '#ffcf56' }} onClick={onConfirm}>
+        <p style={{ fontSize: '1.1rem' }}>← / → で選択、画面クリックで決定</p>
+        <button
+          type="button"
+          style={{ ...buttonStyle, background: '#ffcf56', color: '#1a1a1a' }}
+          onClick={onConfirm}
+        >
           この人数で開始
         </button>
       </div>
