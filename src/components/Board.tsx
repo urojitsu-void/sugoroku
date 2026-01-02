@@ -90,7 +90,7 @@ export function Board({ board, players, branchOptions, selectedBranchId, current
   const geometry = useMemo<GeometrySpec>(() => {
     const width = Math.max(size.width, 400)
     const height = Math.max(size.height, 400)
-    const baseHexWidth = Math.min(180, Math.max(110, width / Math.max(layout.columnCount * 0.8, 1)))
+    const baseHexWidth = Math.min(320, Math.max(180, width / Math.max(layout.columnCount * 0.6, 1)))
     const hexWidth = baseHexWidth
     const hexHeight = hexWidth * Math.sqrt(3) * 0.5
     const spacingX = hexWidth * 0.75
@@ -163,7 +163,7 @@ export function Board({ board, players, branchOptions, selectedBranchId, current
             <HexTileContent
               node={entry.node}
               players={playersOnNode}
-              width={geometry.hexWidth * 0.7}
+              width={geometry.hexWidth * 0.86}
             />
           </HexTile>
         )

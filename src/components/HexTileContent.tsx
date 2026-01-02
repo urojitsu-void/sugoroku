@@ -13,32 +13,19 @@ export function HexTileContent({ node, players, width }: HexTileContentProps) {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: 2,
+    justifyContent: 'space-around',
+    padding: 4,
   }
 
   const titleStyle: React.CSSProperties = {
     fontWeight: 700,
-    fontSize: Math.min(width * 0.11, 18),
+    fontSize: Math.min(width * 0.14, 30),
     lineHeight: 1.2,
     margin: 0,
     color: '#fff',
     textAlign: 'center',
-  }
-
-  const descriptionStyle: React.CSSProperties = {
-    fontSize: Math.min(width * 0.09, 14),
-    lineHeight: 1.2,
-    margin: 0,
-    color: 'rgba(255,255,255,0.85)',
-    textAlign: 'center',
-  }
-
-  const badgeStyle: React.CSSProperties = {
-    fontSize: Math.min(width * 0.08, 12),
-    letterSpacing: '0.08em',
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
+    wordBreak: 'break-word',
+    whiteSpace: 'pre-wrap',
   }
 
   const tokensStyle: React.CSSProperties = {
@@ -51,8 +38,6 @@ export function HexTileContent({ node, players, width }: HexTileContentProps) {
   return (
     <div style={contentStyle}>
       <p style={titleStyle}>{node.title}</p>
-      <p style={descriptionStyle}>{node.description}</p>
-      <div style={badgeStyle}>{node.kind === 'goal' ? 'GOAL' : node.kind === 'start' ? 'START' : ''}</div>
       {players.length > 0 &&
         <div style={tokensStyle}>
           {players.map((player) => (
@@ -60,11 +45,16 @@ export function HexTileContent({ node, players, width }: HexTileContentProps) {
               key={player.id}
               style={{
                 backgroundColor: player.color,
-                color: '#06132a',
-                borderRadius: 999,
-                padding: '0 2px',
-                fontSize: Math.min(width * 0.08, 12),
+                width: Math.min(width * 0.24, 36),
+                height: Math.min(width * 0.24, 36),
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: Math.min(width * 0.09, 15),
                 fontWeight: 700,
+                color: '#06132a',
+                boxShadow: '0 0 6px rgba(0,0,0,0.4)',
               }}
             >
               {player.name}

@@ -53,7 +53,7 @@ export function HexTile({
           stroke={isBranchSelected ? '#fff' : isBranchOption ? '#d8bfff' : border}
           strokeWidth={strokeWidth}
         />
-        <foreignObject x={width * 0.15} y={height * 0.2} width={width * 0.7} height={height * 0.6}>
+        <foreignObject x={width * 0.1} y={height * 0.15} width={width * 0.8} height={height * 0.7}>
           {children}
         </foreignObject>
       </svg>

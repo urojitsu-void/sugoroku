@@ -22,7 +22,7 @@ const panelStyle: React.CSSProperties = {
 }
 
 const valueStyle: React.CSSProperties = { fontSize: '4rem', fontWeight: 700, textAlign: 'center' }
-const statusStyle: React.CSSProperties = { minHeight: '3rem', whiteSpace: 'pre-line' }
+const statusStyle: React.CSSProperties = { minHeight: '3rem', fontSize: '2rem', fontWeight: 700, whiteSpace: 'pre-line' }
 const winnerStyle: React.CSSProperties = {
   background: 'rgba(118,230,160,0.2)',
   border: '1px solid rgba(118,230,160,0.6)',
@@ -44,7 +44,7 @@ const buttonStyle: React.CSSProperties = {
 export function ControlPanel({ diceResult, currentPlayer, message, finishOrder, onReset, playerNames }: ControlPanelProps) {
   return (
     <div style={panelStyle}>
-      <div style={valueStyle}>{diceResult ?? '？'}</div>
+      <div style={valueStyle}>🎲{diceResult ?? '？'}</div>
       <div>現在のプレイヤー：{currentPlayer ? playerNames[currentPlayer.id] : '-'}</div>
       <div style={statusStyle}>{message}</div>
       {finishOrder.length > 0 && (

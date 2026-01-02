@@ -4,7 +4,7 @@
   "nodes": [
     {
       "id": "start",
-      "title": "配信スタート",
+      "title": "スタート",
       "description": "オープニングトークでテンションを上げる",
       "next": [
         "warmup"
@@ -13,7 +13,7 @@
     },
     {
       "id": "warmup",
-      "title": "準備運動",
+      "title": "準備運動\n（1マス進む）",
       "description": "過去の失敗談を軽く小出しにして雰囲気作り（1マス進む）",
       "next": [
         "challenge"
@@ -54,7 +54,7 @@
     },
     {
       "id": "leftDetour",
-      "title": "寄り道インタビュー",
+      "title": "寄り道インタビュー\n（1マス戻る）",
       "description": "スタッフに突撃取材されてアタフタ（1マス戻る）",
       "next": [
         "leftMemory"
@@ -76,7 +76,7 @@
     },
     {
       "id": "rightGame",
-      "title": "即興ゲーム",
+      "title": "即興ゲーム\n（1マス進む）",
       "description": "視聴者の指示でモノマネ３連発（1マス進む）",
       "next": [
         "rightSecret"
@@ -116,7 +116,7 @@
     },
     {
       "id": "karaoke",
-      "title": "無茶ぶりソング",
+      "title": "無茶ぶりソング\n（1回休み）",
       "description": "即興歌唱で喉を酷使、次のターンは休憩（1回休み）",
       "next": [
         "prank"
@@ -129,7 +129,7 @@
     },
     {
       "id": "prank",
-      "title": "ドッキリ勃発",
+      "title": "ドッキリ勃発\n（2マス戻る）",
       "description": "突然のサプライズでオロオロ（2マス戻る）",
       "next": [
         "finale"
